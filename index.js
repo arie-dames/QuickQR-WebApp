@@ -23,6 +23,14 @@ const IconDownload = () => html`
   </svg>
 `;
 
+const LOGO_PRESETS = {
+  'google': 'https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png',
+  'gcloud': 'https://www.gstatic.com/images/branding/product/2x/cloud_48dp.png',
+  'drive': 'https://www.gstatic.com/images/branding/product/2x/drive_48dp.png',
+  'synology': 'https://www.synology.com/img/synology_logo_s.png',
+  'search': 'https://www.gstatic.com/images/branding/product/2x/search_48dp.png'
+};
+
 const PRESETS = [
   { name: 'Dark', hex: '#020617' },
   { name: 'Blue', hex: '#2563eb' },
@@ -38,8 +46,14 @@ const App = () => {
   const [password, setPassword] = useState('');
   const [encryption, setEncryption] = useState('WPA');
   const [qrColor, setQrColor] = useState('#020617');
+  const [showLogo, setShowLogo] = useState(false);
+  const [logoSource, setLogoSource] = useState('google');
   
   const qrRef = useRef(null);
+
+  const resolvedLogoUrl = useMemo(() => {
+    return LOGO_PRESETS[logoSource.toLowerCase()] || logoSource;
+  }, [logoSource]);
 
   const qrValue = useMemo(() => {
     if (tab === 'URL') return text.trim() || 'https://';
@@ -54,6 +68,8 @@ const App = () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
+    
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
       const size = 2048;
       canvas.width = size;
@@ -71,6 +87,16 @@ const App = () => {
     };
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   };
+
+  const imageSettings = useMemo(() => {
+    if (!showLogo || !resolvedLogoUrl) return undefined;
+    return {
+      src: resolvedLogoUrl,
+      height: 48,
+      width: 48,
+      excavate: true,
+    };
+  }, [showLogo, resolvedLogoUrl]);
 
   return html`
     <div className="min-h-screen flex items-center justify-center p-6 md:p-12">
@@ -155,26 +181,51 @@ const App = () => {
               </div>
             `}
 
-            <div className="pt-10 border-t border-white/5 space-y-5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">QR Color Preset</label>
-              <div className="flex flex-wrap items-center gap-4">
-                ${PRESETS.map(p => html`
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-white/5">
+              <div className="space-y-5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">QR Color Preset</label>
+                <div className="flex flex-wrap items-center gap-3">
+                  ${PRESETS.map(p => html`
+                    <button 
+                      key=${p.hex}
+                      onClick=${() => setQrColor(p.hex)}
+                      style=${{ backgroundColor: p.hex }}
+                      className=${`w-10 h-10 rounded-xl transition-all hover:scale-110 active:scale-90 ${qrColor === p.hex ? 'ring-2 ring-white ring-offset-4 ring-offset-[#020617]' : 'opacity-40 hover:opacity-100'}`}
+                    />
+                  `)}
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Center Logo</label>
                   <button 
-                    key=${p.hex}
-                    onClick=${() => setQrColor(p.hex)}
-                    style=${{ backgroundColor: p.hex }}
-                    className=${`w-12 h-12 rounded-2xl transition-all hover:scale-110 active:scale-90 ${qrColor === p.hex ? 'ring-2 ring-white ring-offset-4 ring-offset-[#020617]' : 'opacity-40 hover:opacity-100'}`}
-                  />
-                `)}
-                <div className="h-12 w-28 bg-black/30 border border-white/10 rounded-2xl flex items-center px-3 gap-3 relative overflow-hidden">
+                    onClick=${() => setShowLogo(!showLogo)}
+                    className=${`text-[10px] font-black px-3 py-1 rounded-full transition-all ${showLogo ? 'bg-blue-600 text-white' : 'bg-white/5 text-slate-500'}`}
+                  >
+                    ${showLogo ? 'ACTIVE' : 'OFF'}
+                  </button>
+                </div>
+                <div className=${`space-y-3 transition-opacity duration-300 ${showLogo ? 'opacity-100' : 'opacity-20 pointer-events-none'}`}>
                   <input 
-                    type="color" 
-                    value=${qrColor} 
-                    onChange=${(e) => setQrColor(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    type="text"
+                    value=${logoSource}
+                    onInput=${(e) => setLogoSource(e.target.value)}
+                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500/40"
+                    placeholder="URL or Preset (e.g. google, drive, synology)"
                   />
-                  <div className="w-6 h-6 rounded-lg border border-white/20" style=${{backgroundColor: qrColor}}></div>
-                  <span className="text-[10px] font-mono font-black text-slate-400 uppercase">${qrColor}</span>
+                  <div className="flex gap-2">
+                    ${Object.entries(LOGO_PRESETS).map(([id, url]) => html`
+                      <button 
+                        key=${id}
+                        onClick=${() => setLogoSource(id)}
+                        className=${`p-1.5 rounded-lg bg-white/5 border transition-all hover:bg-white/10 ${logoSource.toLowerCase() === id ? 'border-blue-600 ring-1 ring-blue-600/30' : 'border-white/5'}`}
+                        title=${id}
+                      >
+                        <img src=${url} className="w-5 h-5 object-contain" />
+                      </button>
+                    `)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -193,6 +244,7 @@ const App = () => {
                 fgColor=${qrColor} 
                 level="H"
                 includeMargin=${false}
+                imageSettings=${imageSettings}
               />
             </div>
             
@@ -212,7 +264,7 @@ const App = () => {
           </div>
           
           <footer className="text-center text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] py-4">
-            STATIC DEPLOYMENT &bull; NO-BUILD ENGINE &bull; v4.1
+            STATIC DEPLOYMENT &bull; LOGO ENGINE &bull; v4.3
           </footer>
         </div>
 
