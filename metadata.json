@@ -1,0 +1,5 @@
+{
+  "name": "QuickQR - Modern QR Generator",
+  "description": "A high-performance, private, and local-only QR code generator for URLs and WiFi credentials. Optimized for self-hosting on Synology NAS.",
+  "requestFramePermissions": []
+}
