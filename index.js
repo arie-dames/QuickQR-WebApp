@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { QRCodeSVG } from 'qrcode.react';
 import htm from 'htm';
 
-// Bind htm to React.createElement to allow JSX-like syntax in standard JS
 const html = htm.bind(React.createElement);
 
 const IconLink = () => html`
@@ -213,7 +212,7 @@ const App = () => {
           </div>
           
           <footer className="text-center text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] py-4">
-            STATIC DEPLOYMENT &bull; NO-BUILD ENGINE &bull; v4.0
+            STATIC DEPLOYMENT &bull; NO-BUILD ENGINE &bull; v4.1
           </footer>
         </div>
 
